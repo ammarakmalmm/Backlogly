@@ -4,7 +4,6 @@ import type { BacklogItem, ItemType, Status } from './types';
 import { typeMeta } from './types';
 import { repository } from './services/storage';
 import { notifications } from './services/notifications';
-import { seed } from './data/seed';
 import { BacklogCard } from './components/BacklogCard';
 import { ItemModal } from './components/ItemModal';
 import { useAuth } from './components/AuthGate';
@@ -16,7 +15,7 @@ export default function App(){
  const {email,signOut}=useAuth();
  const [items,setItems]=useState<BacklogItem[]>([]),[loaded,setLoaded]=useState(false),[modal,setModal]=useState<BacklogItem|null>(null),[detail,setDetail]=useState<BacklogItem|null>(null),[query,setQuery]=useState(''),[type,setType]=useState<'all'|ItemType>('all'),[status,setStatus]=useState<'all'|Status>('all'),[priority,setPriority]=useState('all'),[sort,setSort]=useState('recent'),[toast,setToast]=useState(''),[pick,setPick]=useState<BacklogItem|null>(null),[page,setPage]=useState('Dashboard'),[theme,setTheme]=useState(localStorage.theme??'system'),[confirmState,setConfirmState]=useState<{message:string,action:()=>Promise<void>}|null>(null);
  useEffect(()=>{document.documentElement.dataset.theme=theme==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;localStorage.theme=theme},[theme]);
- useEffect(()=>{repository.all().then(async data=>{if(!data.length&&!localStorage.seeded){await repository.replace(seed);localStorage.seeded='true';setItems(seed)}else setItems(data);setLoaded(true)}).catch(()=>setLoaded(true))},[]);
+ useEffect(()=>{repository.all().then(data=>{setItems(data);setLoaded(true)}).catch(()=>setLoaded(true))},[]);
  const save=async(item:BacklogItem)=>{const next=item.status==='completed'&&!item.completedAt?{...item,completedAt:new Date().toISOString()}:item;await repository.put(next);setItems(x=>x.some(i=>i.id===next.id)?x.map(i=>i.id===next.id?next:i):[next,...x]);setModal(null);setDetail(null)};
  const complete=(item:BacklogItem)=>{save({...item,status:'completed',progress:100});setToast(messages[Math.floor(Math.random()*messages.length)])};
  const remove=(item:BacklogItem)=>setConfirmState({message:`Are you sure you want to delete "${item.title}"?`,action:async()=>{await repository.remove(item.id);setItems(x=>x.filter(i=>i.id!==item.id));setDetail(null)}});
