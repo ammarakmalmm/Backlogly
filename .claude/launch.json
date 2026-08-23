@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backlogly-dev",
+      "runtimeExecutable": "powershell.exe",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:PATH += ';C:\\Program Files\\nodejs;C:\\Users\\ammar\\AppData\\Roaming\\npm'; & 'C:\\Users\\ammar\\AppData\\Roaming\\npm\\pnpm.cmd' dev"],
+      "port": 5173
+    }
+  ]
+}
