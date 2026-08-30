@@ -24,7 +24,10 @@ export function BarcodeScanner({ onDetect, onClose }: { onDetect: (isbn: string)
       const track = s.getVideoTracks()[0];
       try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }); } catch { /* not supported, ignore */ }
       const c = await reader.decodeFromStream(s, videoRef.current!, (result) => {
-        if (result && !cancelled) { cancelled = true; c.stop(); onDetectRef.current(result.getText()); }
+        if (!result || cancelled) return;
+        const text = result.getText();
+        if (!/^97[89]/.test(text)) return;
+        cancelled = true; c.stop(); onDetectRef.current(text);
       });
       if (cancelled) c.stop(); else controls = c;
     }).catch(() => setError('Could not access the camera. Check your browser permissions.'));
