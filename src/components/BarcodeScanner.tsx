@@ -11,14 +11,24 @@ export function BarcodeScanner({ onDetect, onClose }: { onDetect: (isbn: string)
 
   useEffect(() => {
     let controls: IScannerControls | undefined;
+    let stream: MediaStream | undefined;
     let cancelled = false;
     const hints = new Map();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13]);
     const reader = new BrowserMultiFormatReader(hints);
-    reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
-      if (result && !cancelled) { cancelled = true; controls?.stop(); onDetectRef.current(result.getText()); }
-    }).then(c => { if (cancelled) c.stop(); else controls = c }).catch(() => setError('Could not access the camera. Check your browser permissions.'));
-    return () => { cancelled = true; controls?.stop(); };
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    }).then(async s => {
+      if (cancelled) { s.getTracks().forEach(t => t.stop()); return; }
+      stream = s;
+      const track = s.getVideoTracks()[0];
+      try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }); } catch { /* not supported, ignore */ }
+      const c = await reader.decodeFromStream(s, videoRef.current!, (result) => {
+        if (result && !cancelled) { cancelled = true; c.stop(); onDetectRef.current(result.getText()); }
+      });
+      if (cancelled) c.stop(); else controls = c;
+    }).catch(() => setError('Could not access the camera. Check your browser permissions.'));
+    return () => { cancelled = true; controls?.stop(); stream?.getTracks().forEach(t => t.stop()); };
   }, []);
 
   return <div className="overlay">
