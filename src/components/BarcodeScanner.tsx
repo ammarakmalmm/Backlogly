@@ -21,7 +21,6 @@ export function BarcodeScanner({ onDetect, onClose }: { onDetect: (isbn: string)
     reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
       if (!result || cancelled) return;
       const text = result.getText();
-      if (!/^97[89]/.test(text)) return;
       streak = text === lastText ? streak + 1 : 1;
       lastText = text;
       if (streak >= REQUIRED_MATCHES) { cancelled = true; controls?.stop(); onDetectRef.current(text); }
