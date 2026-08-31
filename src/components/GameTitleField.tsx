@@ -40,7 +40,7 @@ export function GameTitleField({ value, onChange, onSelect }: { value: string; o
     }
   };
 
-  return <div className="game-title-field" ref={boxRef}>
+  return <div className="title-search-field" ref={boxRef}>
     <input autoFocus value={value} onChange={e => handleChange(e.target.value)} onFocus={() => results.length > 0 && setOpen(true)} placeholder="Search for a game…" />
     {open && (loading || results.length > 0) && <div className="title-dropdown">
       {loading && <p className="hint">Searching…</p>}
