@@ -1,4 +1,4 @@
-type BookInfo = { title?: string; author?: string; publisher?: string };
+type BookInfo = { title?: string; author?: string; publisher?: string; image?: string };
 
 async function fromOpenLibrary(isbn: string): Promise<BookInfo | null> {
   const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`, {
@@ -12,6 +12,7 @@ async function fromOpenLibrary(isbn: string): Promise<BookInfo | null> {
     title: book.title,
     author: (book.authors ?? []).map((a: { name: string }) => a.name).join(', '),
     publisher: (book.publishers ?? []).map((p: { name: string }) => p.name).join(', '),
+    image: book.cover?.large || book.cover?.medium || book.cover?.small,
   };
 }
 
@@ -23,10 +24,12 @@ async function fromGoogleBooks(isbn: string): Promise<BookInfo | null> {
   const data = await res.json();
   const info = data.items?.[0]?.volumeInfo;
   if (!info) return null;
+  const thumbnail = info.imageLinks?.large || info.imageLinks?.medium || info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail;
   return {
     title: info.title,
     author: (info.authors ?? []).join(', '),
     publisher: info.publisher ?? '',
+    image: thumbnail?.replace(/^http:/, 'https:'),
   };
 }
 
@@ -40,5 +43,6 @@ export async function lookupByISBN(isbn: string): Promise<BookInfo> {
     title: openLibrary?.title || googleBooks?.title,
     author: openLibrary?.author || googleBooks?.author,
     publisher: openLibrary?.publisher || googleBooks?.publisher,
+    image: openLibrary?.image || googleBooks?.image,
   };
 }
